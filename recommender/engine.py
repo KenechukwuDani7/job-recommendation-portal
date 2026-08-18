@@ -48,6 +48,11 @@ COLLAB_DAMPING = getattr(settings, "RECOMMENDER_COLLAB_DAMPING", 0.25)
 # A recommendation at or above this final score is presented as a strong match.
 STRONG_MATCH = getattr(settings, "RECOMMENDER_STRONG_MATCH", 0.60)
 
+# Below this the vacancy is not worth putting in front of the graduate. The
+# feed is a recommendation list, not a listing of everything in the database;
+# padding it with near-zero scores is what the portal is meant to avoid.
+MIN_SCORE = getattr(settings, "RECOMMENDER_MIN_SCORE", 0.10)
+
 
 class Recommendation:
     """One scored vacancy, ready for the template."""
@@ -176,8 +181,12 @@ def collaborative_scores(user, jobs):
     return _normalise(scores)
 
 
-def recommend(profile, limit=None, queryset=None):
-    """Return vacancies ranked by hybrid score, highest first."""
+def recommend(profile, limit=None, queryset=None, min_score=None):
+    """Return vacancies ranked by hybrid score, highest first.
+
+    Vacancies scoring below ``min_score`` are dropped. Pass ``min_score=0`` to
+    score the whole corpus, which the evaluation in section 4.6.2 requires.
+    """
     jobs = list(queryset if queryset is not None else Job.objects.filter(status="open")
                 .select_related("employer"))
     if not jobs:
@@ -209,5 +218,7 @@ def recommend(profile, limit=None, queryset=None):
         )
         for i, job in enumerate(jobs)
     ]
+    cutoff = MIN_SCORE if min_score is None else min_score
+    results = [r for r in results if r.score >= cutoff]
     results.sort(key=lambda r: r.score, reverse=True)
     return results[:limit] if limit else results

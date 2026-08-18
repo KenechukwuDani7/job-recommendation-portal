@@ -160,10 +160,13 @@ TEMPLATES = [
      "economics"),
 ]
 
-LOCATIONS = ["Lagos", "Abuja", "Port Harcourt", "Ibadan", "Enugu", "Kano", "Remote", "Benin City"]
-LOCATION_WEIGHTS = [40, 18, 8, 6, 5, 4, 15, 4]
-JOB_TYPES = ["full_time", "full_time", "full_time", "internship", "nysc", "contract", "part_time"]
-EXPERIENCE = ["entry", "entry", "entry", "junior", "junior", "mid"]
+LOCATIONS = ["Lagos", "Benin City"]
+LOCATION_WEIGHTS = [65, 35]
+# Weighted so the mix resembles a real board, where full-time roles dominate.
+JOB_TYPES = ["full_time", "internship", "nysc", "contract", "part_time"]
+JOB_TYPE_WEIGHTS = [62, 14, 12, 7, 5]
+EXPERIENCE = ["entry", "junior", "mid"]
+EXPERIENCE_WEIGHTS = [58, 30, 12]
 
 FIRST_NAMES = ["Chidi", "Amaka", "Tunde", "Ngozi", "Emeka", "Funmi", "Ibrahim", "Zainab",
                "Obinna", "Blessing", "Yusuf", "Chioma", "Segun", "Aisha", "Kelechi",
@@ -242,7 +245,12 @@ class Command(BaseCommand):
     help = "Seed the database with employers, vacancies, graduate profiles and interactions."
 
     def add_arguments(self, parser):
-        parser.add_argument("--jobs", type=int, default=150)
+        # The default corpus is kept small so the demonstration fits on a
+        # couple of pages. The evaluation in section 4.6.2 needs a larger one:
+        # run "seed --flush --jobs 150" before measuring precision@10, since
+        # ten results drawn from a twenty-vacancy corpus is half the corpus and
+        # the figure would carry no meaning.
+        parser.add_argument("--jobs", type=int, default=20)
         parser.add_argument("--graduates", type=int, default=30)
         parser.add_argument("--flush", action="store_true",
                             help="Delete existing non-superuser data first.")
@@ -272,6 +280,36 @@ class Command(BaseCommand):
         first = graduates[0].user.email if graduates else "none"
         self.stdout.write("Test graduate login: {} / testpass123".format(first))
 
+    MIN_JOBS_PER_FIELD = 3
+
+    def _select_templates(self, count):
+        """Choose which role templates make up the corpus.
+
+        Spreading a small corpus thinly across every field would leave each
+        graduate with roughly one relevant vacancy, so the feed would show two
+        results and the collaborative component would have no field signal to
+        learn from. Instead the corpus is concentrated into as many fields as
+        can hold at least MIN_JOBS_PER_FIELD vacancies each, and graduates are
+        then assigned only to fields the corpus actually covers.
+        """
+        by_field = {}
+        for template in TEMPLATES:
+            by_field.setdefault(template[3], []).append(template)
+
+        ordered = sorted(by_field, key=lambda f: -len(by_field[f]))
+        usable = max(1, min(len(ordered), count // self.MIN_JOBS_PER_FIELD))
+        fields = ordered[:usable]
+
+        picks = []
+        i = 0
+        while len(picks) < count:
+            field = fields[i % len(fields)]
+            options = by_field[field]
+            picks.append(options[(i // len(fields)) % len(options)])
+            i += 1
+        self.corpus_fields = fields
+        return picks
+
     def _create_employers(self):
         employers = []
         for name, industry in COMPANIES:
@@ -300,12 +338,13 @@ class Command(BaseCommand):
 
     def _create_jobs(self, employers, count):
         jobs = []
+        picks = self._select_templates(count)
         for i in range(count):
-            title, skills, body, field = TEMPLATES[i % len(TEMPLATES)]
+            title, skills, body, field = picks[i]
             employer = random.choice(employers)
             location = random.choices(LOCATIONS, weights=LOCATION_WEIGHTS, k=1)[0]
-            job_type = random.choice(JOB_TYPES)
-            experience = random.choice(EXPERIENCE)
+            job_type = random.choices(JOB_TYPES, weights=JOB_TYPE_WEIGHTS, k=1)[0]
+            experience = random.choices(EXPERIENCE, weights=EXPERIENCE_WEIGHTS, k=1)[0]
             salary_min = random.choice([120, 150, 200, 250, 300, 400, 450]) * 1000
             salary_max = salary_min + random.choice([100, 150, 200, 250]) * 1000
             posted = timezone.now() - timedelta(days=random.randint(0, 45),
@@ -334,7 +373,10 @@ class Command(BaseCommand):
 
     def _create_graduates(self, count):
         graduates = []
-        fields = list(FIELD_PROFILES.keys())
+        # Only assign graduates to fields the vacancy corpus actually covers,
+        # otherwise a graduate opens an empty feed through no fault of theirs.
+        covered = getattr(self, "corpus_fields", None) or list(FIELD_PROFILES)
+        fields = [f for f in covered if f in FIELD_PROFILES] or list(FIELD_PROFILES)
         used = set()
         for i in range(count):
             first = FIRST_NAMES[i % len(FIRST_NAMES)]
@@ -384,8 +426,16 @@ class Command(BaseCommand):
         for grad in graduates:
             field = grad.field_of_study.lower()
             related = [j for j in jobs if getattr(j, "seed_field", "") == field]
-            pool = related if len(related) >= 6 else jobs
-            viewed = random.sample(pool, min(len(pool), random.randint(6, 14)))
+            others = [j for j in jobs if j not in related]
+
+            # Mostly own-field engagement with a little spillover. On a small
+            # corpus a graduate's own field may hold only one or two vacancies,
+            # so drawing purely at random would leave the collaborative
+            # component with noise instead of a field signal to learn from.
+            viewed = list(related)
+            viewed += random.sample(others, min(len(others), random.randint(2, 5)))
+            if not viewed:
+                viewed = random.sample(jobs, min(len(jobs), 5))
             for job in viewed:
                 Interaction.objects.create(user=grad.user, job=job,
                                            interaction_type=Interaction.VIEW)
