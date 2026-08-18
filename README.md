@@ -6,6 +6,20 @@ unranked list of keyword matches.
 
 Final-year undergraduate project.
 
+**Live demonstration: https://jobmatch-amber.vercel.app**
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Graduate | `chidi.okafor@example.com` | `testpass123` |
+| Employer | `hr@nestlenigeria.com` | `testpass123` |
+
+Sign in as a graduate and compare **Recommended** with **Find Jobs**: the same
+vacancies, once ranked against your profile with the matched skills shown, and
+once as a conventional list ordered by date.
+
+The demonstration data resets whenever the serverless instance is recycled, so
+anything created while browsing is temporary.
+
 ## Approach
 
 The recommendation engine is a hybrid of two techniques:
