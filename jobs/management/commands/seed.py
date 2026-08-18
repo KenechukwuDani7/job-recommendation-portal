@@ -366,6 +366,7 @@ class Command(BaseCommand):
                 salary_max=salary_max if disclose else None,
                 date_posted=posted,
                 deadline=(posted + timedelta(days=random.randint(20, 60))).date(),
+                category=field,
             )
             job.seed_field = field
             jobs.append(job)

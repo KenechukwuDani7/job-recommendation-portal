@@ -19,8 +19,29 @@ class Job(models.Model):
         ("open", "Open"),
         ("closed", "Closed"),
     ]
+    # The occupational category a vacancy belongs to. Job boards group
+    # vacancies this way, and it also supplies the independent relevance
+    # label used by the evaluation in section 4.6.2: it is assigned when the
+    # vacancy is created and is not derived from anything the recommendation
+    # engine computes.
+    CATEGORY_CHOICES = [
+        ("computer science", "Information Technology"),
+        ("accounting", "Accounting and Finance"),
+        ("marketing", "Marketing and Sales"),
+        ("business administration", "Business and Administration"),
+        ("human resource management", "Human Resources"),
+        ("civil engineering", "Civil Engineering"),
+        ("mechanical engineering", "Mechanical Engineering"),
+        ("electrical engineering", "Electrical Engineering"),
+        ("biochemistry", "Science and Laboratory"),
+        ("mass communication", "Media and Communication"),
+        ("economics", "Economics and Research"),
+        ("law", "Legal"),
+        ("education", "Education"),
+    ]
 
     employer = models.ForeignKey(EmployerProfile, on_delete=models.CASCADE, related_name="jobs")
+    category = models.CharField(max_length=40, choices=CATEGORY_CHOICES, blank=True)
     title = models.CharField(max_length=200)
     description = models.TextField()
     required_skills = models.TextField(help_text="Comma-separated list of required skills.")
