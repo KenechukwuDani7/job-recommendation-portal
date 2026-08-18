@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}JobMatch - Job recommendations for graduates{% endblock %}
+
+{% block content %}
+<div style="max-width:620px;margin:56px auto 0">
+  <h1 style="font-size:26px;margin:0 0 8px">Jobs matched to your qualifications</h1>
+  <p style="color:var(--meta);font-size:15px;margin:0 0 20px">
+    JobMatch builds a profile from your degree, field of study and skills, then ranks
+    every vacancy by how well it fits you. {{ job_count }} vacancies are currently listed.
+  </p>
+
+  <div style="display:flex;gap:8px;margin-bottom:28px">
+    <a class="btn" href="{% url 'register' %}">Create a graduate account</a>
+    <a class="btn secondary" href="{% url 'login' %}">Sign in</a>
+  </div>
+
+  <div class="panel">
+    <h2 style="font-size:14px;margin:0 0 8px">How it works</h2>
+    <ol style="margin:0;padding-left:18px;color:var(--meta)">
+      <li style="margin-bottom:4px">Create an account and enter your qualifications and skills.</li>
+      <li style="margin-bottom:4px">Your profile is compared against every vacancy on the platform.</li>
+      <li style="margin-bottom:4px">Vacancies are ranked by match score, with the matched skills shown.</li>
+      <li>Apply directly, and track the status of each application.</li>
+    </ol>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Sign in - JobMatch{% endblock %}
+
+{% block content %}
+<div style="max-width:380px;margin:40px auto">
+  <h1 style="font-size:20px;margin:0 0 12px">Sign in</h1>
+
+  <form method="post" class="panel">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="notice warning">Those details were not recognised. Check your email address and password.</div>
+    {% endif %}
+
+    <div class="field">
+      <label for="{{ form.username.id_for_label }}">Email address</label>
+      {{ form.username }}
+    </div>
+    <div class="field">
+      <label for="{{ form.password.id_for_label }}">Password</label>
+      {{ form.password }}
+    </div>
+    <button class="btn" type="submit" style="width:100%">Sign in</button>
+  </form>
+
+  <p style="color:var(--meta);font-size:13px;text-align:center">
+    Do not have an account? <a href="{% url 'register' %}">Create one</a>
+  </p>
+</div>
+{% endblock %}

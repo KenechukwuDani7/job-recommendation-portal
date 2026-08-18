@@ -1,0 +1,53 @@
+{# Filter rail with counts, in the manner of a real job board. #}
+<div class="panel sidebar-panel">
+  <div class="filter-group">
+    <h3>Location</h3>
+    <ul>
+      {% if active_location %}
+        <li><a href="?{% if query %}q={{ query }}{% endif %}">All locations</a></li>
+      {% endif %}
+      {% for name, count in location_options %}
+        <li>
+          <a class="{% if active_location == name %}on{% endif %}"
+             href="?location={{ name|urlencode }}{% if active_job_type %}&job_type={{ active_job_type }}{% endif %}{% if active_experience %}&experience={{ active_experience }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">
+            <span>{{ name }}</span><span class="count">{{ count }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="filter-group">
+    <h3>Job type</h3>
+    <ul>
+      {% if active_job_type %}
+        <li><a href="?{% if active_location %}location={{ active_location|urlencode }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">All types</a></li>
+      {% endif %}
+      {% for value, label, count in job_type_options %}
+        <li>
+          <a class="{% if active_job_type == value %}on{% endif %}"
+             href="?job_type={{ value }}{% if active_location %}&location={{ active_location|urlencode }}{% endif %}{% if active_experience %}&experience={{ active_experience }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">
+            <span>{{ label }}</span><span class="count">{{ count }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="filter-group">
+    <h3>Experience</h3>
+    <ul>
+      {% if active_experience %}
+        <li><a href="?{% if active_location %}location={{ active_location|urlencode }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">All levels</a></li>
+      {% endif %}
+      {% for value, label, count in experience_options %}
+        <li>
+          <a class="{% if active_experience == value %}on{% endif %}"
+             href="?experience={{ value }}{% if active_location %}&location={{ active_location|urlencode }}{% endif %}{% if active_job_type %}&job_type={{ active_job_type }}{% endif %}{% if query %}&q={{ query|urlencode }}{% endif %}">
+            <span>{{ label }}</span><span class="count">{{ count }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>

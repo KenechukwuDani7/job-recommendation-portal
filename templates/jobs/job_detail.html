@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} at {{ job.employer.company_name }} - JobMatch{% endblock %}
+
+{% block content %}
+<div class="detail">
+  <div class="body panel">
+    <h1>{{ job.title }}</h1>
+    <div class="job-meta" style="margin-bottom:12px">
+      {{ job.employer.company_name }} &middot; {{ job.location }} &middot;
+      {{ job.get_job_type_display }} &middot; Posted {{ job.posted_ago }}
+    </div>
+
+    {% if matched_skills %}
+      <div class="matched" style="border-top:0;padding-top:0;margin-bottom:14px">
+        <b>Matches your skills:</b> {{ matched_skills|join:", " }}
+      </div>
+    {% endif %}
+
+    <h3 style="font-size:14px;margin:16px 0 6px">Job description</h3>
+    <p>{{ job.description }}</p>
+
+    <h3 style="font-size:14px;margin:16px 0 6px">Required skills</h3>
+    <p>
+      {% for skill in job.skill_list %}<span class="tag">{{ skill }}</span>{% endfor %}
+    </p>
+  </div>
+
+  <div class="side">
+    <div class="panel" style="margin-bottom:8px">
+      {% if percentage is not None %}
+        <div class="match-label">Match with your profile</div>
+        <div class="match-score" style="font-size:22px">{{ percentage }}%</div>
+        <div class="bar" style="margin-bottom:12px"><span style="width: {{ percentage }}%"></span></div>
+      {% endif %}
+
+      {% if has_applied %}
+        <button class="btn" disabled style="width:100%">Application submitted</button>
+      {% else %}
+        <form method="post" action="{% url 'apply' job.pk %}">
+          {% csrf_token %}
+          <button class="btn" type="submit" style="width:100%">Apply for this job</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <dl class="kv">
+        <dt>Company</dt><dd>{{ job.employer.company_name }}</dd>
+        <dt>Industry</dt><dd>{{ job.employer.industry|default:"Not stated" }}</dd>
+        <dt>Location</dt><dd>{{ job.location }}</dd>
+        <dt>Job type</dt><dd>{{ job.get_job_type_display }}</dd>
+        <dt>Experience</dt><dd>{{ job.get_experience_level_display }}</dd>
+        <dt>Salary</dt><dd>{{ job.salary_display }}</dd>
+        {% if job.deadline %}<dt>Deadline</dt><dd>{{ job.deadline|date:"d M Y" }}</dd>{% endif %}
+      </dl>
+    </div>
+  </div>
+</div>
+{% endblock %}

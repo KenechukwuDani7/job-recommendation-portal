@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Find jobs - JobMatch{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">{% include "jobs/_filters.html" %}</aside>
+
+  <div class="main">
+    <form class="search-bar" method="get">
+      <input type="text" name="q" value="{{ query }}" placeholder="Job title, skill or company">
+      {% if active_location %}<input type="hidden" name="location" value="{{ active_location }}">{% endif %}
+      {% if active_job_type %}<input type="hidden" name="job_type" value="{{ active_job_type }}">{% endif %}
+      {% if active_experience %}<input type="hidden" name="experience" value="{{ active_experience }}">{% endif %}
+      <button class="btn" type="submit">Search</button>
+    </form>
+
+    <div class="results-head">
+      <div>
+        <h1>{% if query %}Results for "{{ query }}"{% else %}All vacancies{% endif %}</h1>
+        <div class="sub">
+          {{ total }} job{{ total|pluralize }} found &middot; sorted by date posted
+          &middot; <a href="{% url 'recommended' %}">See jobs matched to your profile</a>
+        </div>
+      </div>
+    </div>
+
+    {% for job in page_obj %}
+      <article class="job">
+        <div class="logo" style="background: {{ job.employer.logo_colour }}">{{ job.employer.initials }}</div>
+        <div class="job-body">
+          <div class="job-title"><a href="{% url 'job_detail' job.pk %}">{{ job.title }}</a></div>
+          <div class="job-company">{{ job.employer.company_name }}</div>
+          <div class="job-meta">
+            {{ job.location }} &middot; {{ job.get_job_type_display }} &middot; {{ job.salary_display }}
+          </div>
+          <div class="job-foot">
+            {% if job.is_new %}<span class="tag new">New</span>{% endif %}
+            {% if job.pk in applied_ids %}<span class="tag applied">Applied</span>{% endif %}
+            <span class="tag">{{ job.get_experience_level_display }}</span>
+            Posted {{ job.posted_ago }}
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="panel empty">
+        No vacancies found{% if query %} for "{{ query }}"{% endif %}.
+        <a href="{% url 'search' %}">Clear search</a>
+      </div>
+    {% endfor %}
+
+    {% if page_obj.has_other_pages %}
+      <div class="pager">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{{ querystring }}">Previous</a>
+        {% endif %}
+        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{{ querystring }}">Next</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,231 @@
+/* Deliberately plain. Real job boards are dense, bordered and text-heavy;
+   shadows, gradients and animation are what make a project site look unreal. */
+
+:root {
+  --text: #1a1a1a;
+  --meta: #5c5c5c;
+  --border: #e4e4e7;
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --accent: #0a66c2;
+  --accent-dark: #084d92;
+  --good: #067a46;
+  --warn: #8a6d00;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- header ---------- */
+.site-header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.brand { font-weight: 700; font-size: 17px; color: var(--text); }
+.brand:hover { text-decoration: none; }
+.nav { display: flex; gap: 18px; align-items: center; margin-left: auto; }
+.nav a { color: var(--meta); }
+.nav a.active { color: var(--text); font-weight: 600; }
+
+/* ---------- layout ---------- */
+.container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.layout { display: flex; gap: 16px; align-items: flex-start; }
+.sidebar { width: 210px; flex: 0 0 210px; }
+.main { flex: 1; min-width: 0; }
+
+@media (max-width: 800px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; flex: none; }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px;
+}
+
+/* ---------- filters ---------- */
+.filter-group { margin-bottom: 18px; }
+.filter-group h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--meta);
+  margin: 0 0 8px;
+}
+.filter-group ul { list-style: none; margin: 0; padding: 0; }
+.filter-group li { margin-bottom: 4px; }
+.filter-group a { color: var(--text); display: flex; justify-content: space-between; }
+.filter-group a.on { font-weight: 700; color: var(--accent); }
+.filter-group .count { color: var(--meta); }
+
+/* ---------- results ---------- */
+.results-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.results-head h1 { font-size: 18px; margin: 0; }
+.results-head .sub { color: var(--meta); font-size: 13px; }
+
+.job {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 12px;
+}
+.job:hover { background: #fbfbfc; }
+
+.logo {
+  width: 40px; height: 40px;
+  flex: 0 0 40px;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.job-body { flex: 1; min-width: 0; }
+.job-title { font-size: 15px; font-weight: 600; }
+.job-company { color: var(--text); }
+.job-meta { color: var(--meta); font-size: 13px; margin-top: 2px; }
+.job-foot { color: var(--meta); font-size: 12px; margin-top: 6px; }
+
+.match { text-align: right; flex: 0 0 92px; }
+.match-score { font-size: 15px; font-weight: 700; color: var(--good); }
+.match-label { font-size: 11px; color: var(--meta); text-transform: uppercase; letter-spacing: 0.03em; }
+.bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 4px; }
+.bar span { display: block; height: 3px; background: var(--good); border-radius: 2px; }
+
+.matched {
+  font-size: 12px;
+  color: var(--meta);
+  margin-top: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+.matched b { color: var(--text); font-weight: 600; }
+
+.tag {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 5px;
+  font-size: 11px;
+  color: var(--meta);
+  margin-right: 4px;
+}
+.tag.new { color: var(--good); border-color: #bfe3d0; }
+.tag.applied { color: var(--accent); border-color: #bcd8f0; }
+
+/* ---------- forms ---------- */
+label { display: block; font-weight: 600; margin-bottom: 3px; font-size: 13px; }
+input[type=text], input[type=email], input[type=password], input[type=number],
+input[type=url], select, textarea {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid #c9c9cf;
+  border-radius: 3px;
+  font: inherit;
+  background: #fff;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid #cfe2f5; border-color: var(--accent); }
+.field { margin-bottom: 14px; }
+.field .help { font-size: 12px; color: var(--meta); margin-top: 3px; }
+.field .error { font-size: 12px; color: #b3261e; margin-top: 3px; }
+.row { display: flex; gap: 12px; }
+.row .field { flex: 1; }
+
+.btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 7px 14px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover { background: var(--accent-dark); text-decoration: none; }
+.btn.secondary { background: #fff; color: var(--accent); }
+.btn.secondary:hover { background: #f2f7fc; }
+.btn:disabled { background: #eee; color: var(--meta); border-color: var(--border); cursor: default; }
+
+.search-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+.search-bar input { flex: 1; }
+
+/* ---------- messages / notices ---------- */
+.notice {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  background: var(--panel);
+  padding: 9px 12px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+.notice.success { border-left-color: var(--good); }
+.notice.warning { border-left-color: var(--warn); }
+
+.empty { color: var(--meta); padding: 28px 14px; text-align: center; }
+
+/* ---------- tables ---------- */
+table { width: 100%; border-collapse: collapse; background: var(--panel); }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--meta); }
+
+/* ---------- pagination ---------- */
+.pager { margin-top: 14px; display: flex; gap: 6px; align-items: center; }
+.pager a, .pager span {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 3px;
+  padding: 5px 10px;
+  color: var(--text);
+}
+.pager .current { font-weight: 700; border-color: var(--accent); color: var(--accent); }
+
+/* ---------- detail ---------- */
+.detail { display: flex; gap: 16px; align-items: flex-start; }
+.detail .body { flex: 1; min-width: 0; }
+.detail .side { width: 260px; flex: 0 0 260px; }
+.detail h1 { font-size: 20px; margin: 0 0 4px; }
+.kv { margin: 0; }
+.kv dt { font-size: 12px; color: var(--meta); text-transform: uppercase; letter-spacing: 0.03em; }
+.kv dd { margin: 0 0 10px; }
+
+@media (max-width: 800px) {
+  .detail { flex-direction: column; }
+  .detail .side { width: 100%; flex: none; }
+}
+
+.progress { height: 6px; background: var(--border); border-radius: 3px; }
+.progress span { display: block; height: 6px; background: var(--accent); border-radius: 3px; }

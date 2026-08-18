@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}My applications - JobMatch{% endblock %}
+
+{% block content %}
+<div class="results-head">
+  <div>
+    <h1>My applications</h1>
+    <div class="sub">{{ applications|length }} application{{ applications|length|pluralize }} submitted</div>
+  </div>
+</div>
+
+{% if applications %}
+  <div class="panel" style="padding:0;overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Job title</th>
+          <th>Company</th>
+          <th>Location</th>
+          <th>Date applied</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for application in applications %}
+          <tr>
+            <td><a href="{% url 'job_detail' application.job.pk %}">{{ application.job.title }}</a></td>
+            <td>{{ application.job.employer.company_name }}</td>
+            <td>{{ application.job.location }}</td>
+            <td>{{ application.date_applied|date:"d M Y" }}</td>
+            <td>{{ application.get_status_display }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="panel empty">
+    You have not applied for any vacancies yet.
+    <a href="{% url 'recommended' %}">See jobs matched to your profile</a>
+  </div>
+{% endif %}
+{% endblock %}

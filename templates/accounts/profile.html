@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}My profile - JobMatch{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <div class="main" style="max-width:640px">
+    <div class="results-head">
+      <div>
+        <h1>My profile</h1>
+        <div class="sub">These details determine which vacancies are recommended to you.</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:600">Profile completeness</span>
+        <span style="font-size:13px;color:var(--meta)">{{ profile.completeness }}%</span>
+      </div>
+      <div class="progress"><span style="width: {{ profile.completeness }}%"></span></div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="panel">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="notice warning">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="row">
+        <div class="field">
+          <label for="{{ form.degree.id_for_label }}">Degree</label>
+          {{ form.degree }}
+          {% for e in form.degree.errors %}<div class="error">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="field">
+          <label for="{{ form.class_of_degree.id_for_label }}">Class of degree</label>
+          {{ form.class_of_degree }}
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="{{ form.institution.id_for_label }}">Institution</label>
+        {{ form.institution }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.field_of_study.id_for_label }}">Field of study</label>
+        {{ form.field_of_study }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.skills.id_for_label }}">Skills</label>
+        {{ form.skills }}
+        <div class="help">{{ form.skills.help_text }}</div>
+        {% for e in form.skills.errors %}<div class="error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="{{ form.preferred_location.id_for_label }}">Preferred location</label>
+          {{ form.preferred_location }}
+        </div>
+        <div class="field">
+          <label for="{{ form.preferred_job_type.id_for_label }}">Preferred job type</label>
+          {{ form.preferred_job_type }}
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="{{ form.years_of_experience.id_for_label }}">Years of experience</label>
+          {{ form.years_of_experience }}
+        </div>
+        <div class="field">
+          <label for="{{ form.cv.id_for_label }}">Curriculum vitae</label>
+          {{ form.cv }}
+        </div>
+      </div>
+
+      <button class="btn" type="submit">Save profile</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

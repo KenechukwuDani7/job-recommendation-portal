@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Recommended jobs - JobMatch{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">{% include "jobs/_filters.html" %}</aside>
+
+  <div class="main">
+    <div class="results-head">
+      <div>
+        <h1>Recommended for you</h1>
+        <div class="sub">
+          {{ strong }} strong match{{ strong|pluralize:"es" }}
+          &middot; {{ total }} job{{ total|pluralize }} ranked against your profile
+          &middot; <a href="{% url 'profile' %}">Edit profile</a>
+        </div>
+      </div>
+    </div>
+
+    {% if profile.completeness < 70 %}
+      <div class="notice warning">
+        Your profile is {{ profile.completeness }}% complete. Adding more skills improves
+        the accuracy of these recommendations. <a href="{% url 'profile' %}">Complete profile</a>
+      </div>
+    {% endif %}
+
+    {% for rec in page_obj %}
+      <article class="job">
+        <div class="logo" style="background: {{ rec.job.employer.logo_colour }}">{{ rec.job.employer.initials }}</div>
+        <div class="job-body">
+          <div class="job-title"><a href="{% url 'job_detail' rec.job.pk %}">{{ rec.job.title }}</a></div>
+          <div class="job-company">{{ rec.job.employer.company_name }}</div>
+          <div class="job-meta">
+            {{ rec.job.location }} &middot; {{ rec.job.get_job_type_display }} &middot; {{ rec.job.salary_display }}
+          </div>
+          {% if rec.matched_skills %}
+            <div class="matched"><b>Matches your skills:</b> {{ rec.matched_skills|join:", " }}</div>
+          {% elif rec.collab_score > 0.5 %}
+            <div class="matched">Recommended from the activity of graduates with similar profiles</div>
+          {% endif %}
+          <div class="job-foot">
+            {% if rec.job.is_new %}<span class="tag new">New</span>{% endif %}
+            {% if rec.job.pk in applied_ids %}<span class="tag applied">Applied</span>{% endif %}
+            <span class="tag">{{ rec.job.get_experience_level_display }}</span>
+            Posted {{ rec.job.posted_ago }}
+          </div>
+        </div>
+        <div class="match">
+          <div class="match-score">{{ rec.percentage }}%</div>
+          <div class="match-label">match</div>
+          <div class="bar"><span style="width: {{ rec.percentage }}%"></span></div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="panel empty">
+        No vacancies match the filters you have selected.
+        <a href="{% url 'recommended' %}">Clear filters</a>
+      </div>
+    {% endfor %}
+
+    {% if page_obj.has_other_pages %}
+      <div class="pager">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{{ querystring }}">Previous</a>
+        {% endif %}
+        <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{{ querystring }}">Next</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

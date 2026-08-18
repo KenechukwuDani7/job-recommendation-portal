@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Create an account - JobMatch{% endblock %}
+
+{% block content %}
+<div style="max-width:420px;margin:40px auto">
+  <h1 style="font-size:20px;margin:0 0 4px">Create your account</h1>
+  <p style="color:var(--meta);margin:0 0 12px">
+    Register as a graduate to receive job recommendations matched to your profile.
+  </p>
+
+  <form method="post" class="panel">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="notice warning">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="field">
+      <label for="{{ form.full_name.id_for_label }}">Full name</label>
+      {{ form.full_name }}
+      {% for e in form.full_name.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.email.id_for_label }}">Email address</label>
+      {{ form.email }}
+      {% for e in form.email.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.password1.id_for_label }}">Password</label>
+      {{ form.password1 }}
+      {% for e in form.password1.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.password2.id_for_label }}">Confirm password</label>
+      {{ form.password2 }}
+      {% for e in form.password2.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+
+    <button class="btn" type="submit" style="width:100%">Create account</button>
+  </form>
+
+  <p style="color:var(--meta);font-size:13px;text-align:center">
+    Already registered? <a href="{% url 'login' %}">Sign in</a>
+  </p>
+</div>
+{% endblock %}
