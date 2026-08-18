@@ -4,8 +4,9 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from accounts.models import EmployerProfile, GraduateProfile
-from accounts.permissions import employer_required, graduate_required
+from accounts.models import EmployerProfile, GraduateProfile, User
+from accounts.permissions import (admin_required, employer_required,
+                                  graduate_required)
 from recommender.engine import recommend, score_candidates
 
 from .forms import JobForm
@@ -14,7 +15,8 @@ from .models import Application, Interaction, Job
 
 def _filtered_jobs(request):
     """Vacancies narrowed by the sidebar filters, shared by both listing views."""
-    jobs = Job.objects.filter(status="open").select_related("employer")
+    jobs = (Job.objects.filter(status="open", employer__is_approved=True)
+            .select_related("employer"))
     location = request.GET.get("location", "")
     job_type = request.GET.get("job_type", "")
     experience = request.GET.get("experience", "")
@@ -29,7 +31,7 @@ def _filtered_jobs(request):
 
 def _filter_options(request):
     """Filter values with their counts, in the manner of a real job board."""
-    base = Job.objects.filter(status="open")
+    base = Job.objects.filter(status="open", employer__is_approved=True)
     locations = (base.values_list("location", flat=True))
     counts = {}
     for loc in locations:
@@ -287,6 +289,78 @@ def application_status(request, pk):
         messages.success(request, "{} marked as {}.".format(
             application.graduate.user.full_name, application.get_status_display().lower()))
     return redirect("job_applicants", pk=application.job.pk)
+
+
+# --- Administrator role -----------------------------------------------------
+
+
+@admin_required
+def admin_dashboard(request):
+    """Platform oversight (section 4.3.13).
+
+    Django's built-in admin already provides record-level editing, so this
+    page supplies what it does not: the summary counts and the two moderation
+    actions the administrator actually performs.
+    """
+    employers = (EmployerProfile.objects
+                 .select_related("user")
+                 .annotate(job_count=Count("jobs"))
+                 .order_by("company_name"))
+
+    recent_jobs = (Job.objects
+                   .select_related("employer")
+                   .annotate(application_count=Count("applications"))
+                   .order_by("-date_posted")[:12])
+
+    return render(request, "jobs/admin_dashboard.html", {
+        "graduate_count": User.objects.filter(role=User.GRADUATE).count(),
+        "employer_count": User.objects.filter(role=User.EMPLOYER).count(),
+        "job_count": Job.objects.count(),
+        "open_count": Job.objects.filter(status="open").count(),
+        "application_count": Application.objects.count(),
+        "interaction_count": Interaction.objects.count(),
+        "suspended_count": employers.filter(is_approved=False).count(),
+        "employers": employers,
+        "recent_jobs": recent_jobs,
+    })
+
+
+@admin_required
+def employer_approval(request, pk):
+    """Approve or suspend an employer account.
+
+    Suspension withdraws the company's vacancies from the listings rather than
+    deleting anything, so the action can be undone and no application history
+    is lost.
+    """
+    if request.method != "POST":
+        return redirect("admin_dashboard")
+    employer = get_object_or_404(EmployerProfile, pk=pk)
+    employer.is_approved = not employer.is_approved
+    employer.save(update_fields=["is_approved"])
+    messages.success(request, "{} {}.".format(
+        employer.company_name,
+        "reinstated and its vacancies restored to the listings" if employer.is_approved
+        else "suspended and its vacancies withdrawn from the listings"))
+    return redirect("admin_dashboard")
+
+
+@admin_required
+def admin_job_toggle(request, pk):
+    """Withdraw an inappropriate posting, or restore one.
+
+    This closes the vacancy rather than deleting it: applications already
+    submitted against it stay intact, and the action is reversible. Permanent
+    deletion remains available through the Django admin.
+    """
+    if request.method != "POST":
+        return redirect("admin_dashboard")
+    job = get_object_or_404(Job, pk=pk)
+    job.status = "closed" if job.status == "open" else "open"
+    job.save(update_fields=["status"])
+    messages.success(request, "\"{}\" {}.".format(
+        job.title, "withdrawn from the listings" if job.status == "closed" else "restored"))
+    return redirect("admin_dashboard")
 
 
 def _querystring(request):

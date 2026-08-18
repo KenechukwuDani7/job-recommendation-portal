@@ -266,6 +266,7 @@ class Command(BaseCommand):
             User.objects.filter(is_superuser=False).delete()
             self.stdout.write("Existing seed data removed.")
 
+        admin = self._create_admin()
         employers = self._create_employers()
         jobs = self._create_jobs(employers, options["jobs"])
         graduates = self._create_graduates(options["graduates"])
@@ -278,7 +279,9 @@ class Command(BaseCommand):
                 Interaction.objects.count(), Application.objects.count())
         ))
         first = graduates[0].user.email if graduates else "none"
-        self.stdout.write("Test graduate login: {} / testpass123".format(first))
+        self.stdout.write("Test graduate login:       {} / testpass123".format(first))
+        self.stdout.write("Test employer login:       hr@andela.com / testpass123")
+        self.stdout.write("Test administrator login:  {} / testpass123".format(admin.email))
 
     MIN_JOBS_PER_FIELD = 3
 
@@ -309,6 +312,21 @@ class Command(BaseCommand):
             i += 1
         self.corpus_fields = fields
         return picks
+
+    def _create_admin(self):
+        """A local administrator account, so the admin screens can be shown
+        without running createsuperuser interactively. Development only: the
+        SQLite database is not committed and DEBUG is on."""
+        email = "admin@jobmatch.local"
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={"username": email, "full_name": "Platform Administrator",
+                      "role": User.ADMIN, "is_staff": True, "is_superuser": True},
+        )
+        if created:
+            user.set_password("testpass123")
+            user.save()
+        return user
 
     def _create_employers(self):
         employers = []

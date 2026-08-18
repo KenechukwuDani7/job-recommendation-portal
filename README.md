@@ -51,14 +51,36 @@ The site is then available at http://127.0.0.1:8000/.
 
 `manage.py seed` populates the database with employers, a vacancy corpus,
 graduate profiles and interaction records. It uses a fixed random seed so that
-evaluation runs are reproducible. All seeded accounts use the password
-`testpass123`.
+runs are reproducible. All seeded accounts use the password `testpass123`, and
+the command prints one login for each role when it finishes.
 
-To create an administrator account:
+## Roles
+
+| Role | Screens |
+| --- | --- |
+| Graduate | Profile builder, ranked recommendation feed, keyword search, job detail, apply, application tracker |
+| Employer | Company profile, post and manage vacancies, applicants ranked against the required skills, application status |
+| Administrator | Platform summary, approve or suspend employers, withdraw or restore vacancies, plus the Django admin site |
+
+Suspending an employer or withdrawing a vacancy removes it from the listings
+without deleting records, so applications are preserved and the action can be
+reversed.
+
+## Evaluating the recommender
 
 ```bash
-.venv/Scripts/python.exe manage.py createsuperuser
+.venv/Scripts/python.exe manage.py seed --flush --jobs 150
+.venv/Scripts/python.exe manage.py evaluate --markdown
 ```
+
+This compares the recommendation engine with conventional keyword search on the
+same corpus, reporting precision under both conventions and recall. Relevance is
+judged by the vacancy's occupational category, which is assigned when a vacancy
+is created and is independent of anything the engine computes.
+
+The default corpus of 20 vacancies is sized for demonstration; the evaluation
+needs the larger corpus to be meaningful. Reseed without `--jobs` afterwards to
+return to the smaller one.
 
 ## Structure
 

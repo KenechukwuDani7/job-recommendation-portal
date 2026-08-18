@@ -55,6 +55,10 @@ class User(AbstractUser):
     def is_employer(self):
         return self.role == self.EMPLOYER
 
+    @property
+    def is_administrator(self):
+        return self.role == self.ADMIN or self.is_staff or self.is_superuser
+
 
 class GraduateProfile(models.Model):
     """Graduate attributes from which the recommender builds its profile vector."""

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Administration - JobMatch{% endblock %}
+
+{% block content %}
+<div class="results-head">
+  <div>
+    <h1>Platform administration</h1>
+    <div class="sub">
+      Summary of activity across the platform
+      &middot; <a href="/admin/">Open the Django administration site</a>
+    </div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-value">{{ graduate_count }}</div>
+    <div class="stat-label">Graduates</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ employer_count }}</div>
+    <div class="stat-label">Employers</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ open_count }}</div>
+    <div class="stat-label">Open vacancies</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ job_count }}</div>
+    <div class="stat-label">Vacancies in total</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ application_count }}</div>
+    <div class="stat-label">Applications</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ interaction_count }}</div>
+    <div class="stat-label">Logged interactions</div>
+  </div>
+</div>
+
+{% if suspended_count %}
+  <div class="notice warning">
+    {{ suspended_count }} employer{{ suspended_count|pluralize }} suspended. Their vacancies
+    are withdrawn from the listings until reinstated.
+  </div>
+{% endif %}
+
+<h2 style="font-size:15px;margin:22px 0 8px">Employers</h2>
+<div class="panel" style="padding:0;overflow-x:auto">
+  <table>
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Industry</th>
+        <th>Contact</th>
+        <th>Vacancies</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for employer in employers %}
+        <tr>
+          <td>{{ employer.company_name }}</td>
+          <td>{{ employer.industry|default:"Not stated" }}</td>
+          <td>{{ employer.user.email }}</td>
+          <td>{{ employer.job_count }}</td>
+          <td>
+            {% if employer.is_approved %}
+              <span class="tag new">Approved</span>
+            {% else %}
+              <span class="tag">Suspended</span>
+            {% endif %}
+          </td>
+          <td style="text-align:right;white-space:nowrap">
+            <form method="post" action="{% url 'employer_approval' employer.pk %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit"
+                      style="background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer">
+                {% if employer.is_approved %}Suspend{% else %}Reinstate{% endif %}
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" style="color:var(--meta)">No employers registered.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 style="font-size:15px;margin:22px 0 8px">Recently posted vacancies</h2>
+<div class="panel" style="padding:0;overflow-x:auto">
+  <table>
+    <thead>
+      <tr>
+        <th>Job title</th>
+        <th>Company</th>
+        <th>Location</th>
+        <th>Posted</th>
+        <th>Applicants</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in recent_jobs %}
+        <tr>
+          <td><a href="{% url 'job_detail' job.pk %}">{{ job.title }}</a></td>
+          <td>{{ job.employer.company_name }}</td>
+          <td>{{ job.location }}</td>
+          <td>{{ job.posted_ago }}</td>
+          <td>{{ job.application_count }}</td>
+          <td>
+            {% if job.status == 'open' %}
+              <span class="tag new">Open</span>
+            {% else %}
+              <span class="tag">Closed</span>
+            {% endif %}
+          </td>
+          <td style="text-align:right;white-space:nowrap">
+            <form method="post" action="{% url 'admin_job_toggle' job.pk %}" style="display:inline">
+              {% csrf_token %}
+              <button type="submit"
+                      style="background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer">
+                {% if job.status == 'open' %}Withdraw{% else %}Restore{% endif %}
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" style="color:var(--meta)">No vacancies posted.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p style="color:var(--meta);font-size:12px;margin-top:12px">
+  Withdrawing a vacancy or suspending an employer removes the listings from view without
+  deleting any records, so applications already submitted are preserved and the action can
+  be reversed. Permanent deletion is available through the Django administration site.
+</p>
+{% endblock %}

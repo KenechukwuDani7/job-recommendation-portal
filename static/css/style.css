@@ -229,3 +229,25 @@ th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: 
 
 .progress { height: 6px; background: var(--border); border-radius: 3px; }
 .progress span { display: block; height: 6px; background: var(--accent); border-radius: 3px; }
+
+/* ---------- admin stat tiles ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+.stat-value { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.stat-label {
+  font-size: 12px;
+  color: var(--meta);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 3px;
+}

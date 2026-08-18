@@ -29,3 +29,8 @@ employer_required = _role_required(
     lambda user: user.is_employer,
     "That page is only available to employer accounts.",
 )
+
+admin_required = _role_required(
+    lambda user: user.is_administrator,
+    "That page is only available to administrator accounts.",
+)

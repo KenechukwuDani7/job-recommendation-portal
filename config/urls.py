@@ -38,6 +38,13 @@ urlpatterns = [
     path("employer/jobs/<int:pk>/applicants/", job_views.job_applicants, name="job_applicants"),
     path("employer/applications/<int:pk>/status/",
          job_views.application_status, name="application_status"),
+
+    # Administrator
+    path("administration/", job_views.admin_dashboard, name="admin_dashboard"),
+    path("administration/employers/<int:pk>/approval/",
+         job_views.employer_approval, name="employer_approval"),
+    path("administration/jobs/<int:pk>/toggle/",
+         job_views.admin_job_toggle, name="admin_job_toggle"),
 ]
 
 if settings.DEBUG:

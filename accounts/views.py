@@ -21,10 +21,10 @@ def home(request):
 @login_required
 def dashboard(request):
     """Send each user to the landing page for their role after signing in."""
+    if request.user.is_administrator:
+        return redirect("admin_dashboard")
     if request.user.is_employer:
         return redirect("employer_dashboard")
-    if request.user.is_staff and not request.user.is_graduate:
-        return redirect("/admin/")
     return redirect("recommended")
 
 
