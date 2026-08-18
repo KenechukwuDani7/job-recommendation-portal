@@ -12,16 +12,23 @@
       <a class="brand" href="{% url 'home' %}">JobMatch</a>
       <nav class="nav">
         {% if user.is_authenticated %}
-          <a href="{% url 'recommended' %}" class="{% if request.resolver_match.url_name == 'recommended' %}active{% endif %}">Recommended</a>
-          <a href="{% url 'search' %}" class="{% if request.resolver_match.url_name == 'search' %}active{% endif %}">Find Jobs</a>
-          <a href="{% url 'my_applications' %}" class="{% if request.resolver_match.url_name == 'my_applications' %}active{% endif %}">Applications</a>
-          <a href="{% url 'profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">Profile</a>
+          {% if user.is_employer %}
+            <a href="{% url 'employer_dashboard' %}" class="{% if request.resolver_match.url_name == 'employer_dashboard' %}active{% endif %}">My vacancies</a>
+            <a href="{% url 'job_create' %}" class="{% if request.resolver_match.url_name == 'job_create' %}active{% endif %}">Post a job</a>
+            <a href="{% url 'employer_profile' %}" class="{% if request.resolver_match.url_name == 'employer_profile' %}active{% endif %}">Company</a>
+          {% else %}
+            <a href="{% url 'recommended' %}" class="{% if request.resolver_match.url_name == 'recommended' %}active{% endif %}">Recommended</a>
+            <a href="{% url 'search' %}" class="{% if request.resolver_match.url_name == 'search' %}active{% endif %}">Find Jobs</a>
+            <a href="{% url 'my_applications' %}" class="{% if request.resolver_match.url_name == 'my_applications' %}active{% endif %}">Applications</a>
+            <a href="{% url 'profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">Profile</a>
+          {% endif %}
           <form method="post" action="{% url 'logout' %}" style="display:inline">
             {% csrf_token %}
             <button type="submit" class="btn secondary" style="padding:4px 10px">Sign out</button>
           </form>
         {% else %}
           <a href="{% url 'search' %}">Find Jobs</a>
+          <a href="{% url 'register_employer' %}">For employers</a>
           <a href="{% url 'login' %}">Sign in</a>
           <a class="btn" href="{% url 'register' %}">Create account</a>
         {% endif %}

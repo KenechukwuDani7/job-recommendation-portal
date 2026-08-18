@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}My vacancies - JobMatch{% endblock %}
+
+{% block content %}
+<div class="results-head">
+  <div>
+    <h1>{{ company.company_name }}</h1>
+    <div class="sub">
+      {{ open_count }} open vacanc{{ open_count|pluralize:"y,ies" }}
+      &middot; {{ total_applications }} application{{ total_applications|pluralize }} received
+    </div>
+  </div>
+  <a class="btn" href="{% url 'job_create' %}">Post a job</a>
+</div>
+
+{% if jobs %}
+  <div class="panel" style="padding:0;overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Job title</th>
+          <th>Location</th>
+          <th>Type</th>
+          <th>Posted</th>
+          <th>Applicants</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+          <tr>
+            <td><a href="{% url 'job_detail' job.pk %}">{{ job.title }}</a></td>
+            <td>{{ job.location }}</td>
+            <td>{{ job.get_job_type_display }}</td>
+            <td>{{ job.posted_ago }}</td>
+            <td>
+              {% if job.application_count %}
+                <a href="{% url 'job_applicants' job.pk %}">{{ job.application_count }}</a>
+              {% else %}
+                0
+              {% endif %}
+            </td>
+            <td>
+              {% if job.status == 'open' %}
+                <span class="tag new">Open</span>
+              {% else %}
+                <span class="tag">Closed</span>
+              {% endif %}
+            </td>
+            <td style="white-space:nowrap;text-align:right">
+              <a href="{% url 'job_edit' job.pk %}">Edit</a>
+              &middot;
+              <form method="post" action="{% url 'job_toggle' job.pk %}" style="display:inline">
+                {% csrf_token %}
+                <button type="submit"
+                        style="background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer">
+                  {% if job.status == 'open' %}Close{% else %}Reopen{% endif %}
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="panel empty">
+    You have not posted any vacancies yet.
+    <a href="{% url 'job_create' %}">Post your first job</a>
+  </div>
+{% endif %}
+{% endblock %}

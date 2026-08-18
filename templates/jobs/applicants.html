@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Applicants for {{ job.title }} - JobMatch{% endblock %}
+
+{% block content %}
+<div class="results-head">
+  <div>
+    <h1>Applicants for {{ job.title }}</h1>
+    <div class="sub">
+      {{ candidates|length }} applicant{{ candidates|length|pluralize }}
+      &middot; {{ strong }} strong match{{ strong|pluralize:"es" }}
+      &middot; ranked by fit against the required skills
+      &middot; <a href="{% url 'employer_dashboard' %}">Back to my vacancies</a>
+    </div>
+  </div>
+</div>
+
+{% for candidate in candidates %}
+  <article class="job">
+    <div class="logo" style="background:#41545e">
+      {{ candidate.graduate.user.full_name|slice:":1" }}
+    </div>
+    <div class="job-body">
+      <div class="job-title">{{ candidate.graduate.user.full_name }}</div>
+      <div class="job-meta">
+        {{ candidate.graduate.degree|default:"Degree not stated" }}
+        {% if candidate.graduate.class_of_degree %}
+          &middot; {{ candidate.graduate.get_class_of_degree_display }}
+        {% endif %}
+        {% if candidate.graduate.institution %}
+          &middot; {{ candidate.graduate.institution }}
+        {% endif %}
+      </div>
+      <div class="job-meta">
+        {{ candidate.graduate.field_of_study|default:"Field not stated" }}
+        &middot; {{ candidate.graduate.years_of_experience }} year{{ candidate.graduate.years_of_experience|pluralize }} experience
+        {% if candidate.graduate.preferred_location %}
+          &middot; prefers {{ candidate.graduate.preferred_location }}
+        {% endif %}
+      </div>
+
+      {% if candidate.matched_skills %}
+        <div class="matched">
+          <b>Meets your required skills:</b> {{ candidate.matched_skills|join:", " }}
+        </div>
+      {% else %}
+        <div class="matched">No overlap with the skills required for this vacancy</div>
+      {% endif %}
+
+      <div class="job-foot">
+        Applied {{ candidate.application.date_applied|date:"d M Y" }}
+        &middot; <span class="tag">{{ candidate.application.get_status_display }}</span>
+        {% if candidate.graduate.cv %}
+          &middot; <a href="{{ candidate.graduate.cv.url }}" target="_blank" rel="noopener">View CV</a>
+        {% endif %}
+      </div>
+
+      <form method="post" action="{% url 'application_status' candidate.application.pk %}"
+            style="margin-top:8px;display:flex;gap:6px;align-items:center">
+        {% csrf_token %}
+        <select name="status" style="width:auto">
+          {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if candidate.application.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn secondary" type="submit" style="padding:5px 12px">Update</button>
+      </form>
+    </div>
+    <div class="match">
+      <div class="match-score">{{ candidate.percentage }}%</div>
+      <div class="match-label">match</div>
+      <div class="bar"><span style="width: {{ candidate.percentage }}%"></span></div>
+    </div>
+  </article>
+{% empty %}
+  <div class="panel empty">
+    No graduate has applied for this vacancy yet.
+  </div>
+{% endfor %}
+{% endblock %}

@@ -1,12 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from accounts.models import GraduateProfile
-from recommender.engine import recommend
+from accounts.models import EmployerProfile, GraduateProfile
+from accounts.permissions import employer_required, graduate_required
+from recommender.engine import recommend, score_candidates
 
+from .forms import JobForm
 from .models import Application, Interaction, Job
 
 
@@ -56,7 +58,7 @@ def _filter_options(request):
     }
 
 
-@login_required
+@graduate_required
 def recommended(request):
     """The personalised, relevance-ranked feed (section 4.3.5)."""
     profile, _ = GraduateProfile.objects.get_or_create(user=request.user)
@@ -130,8 +132,12 @@ def job_detail(request, pk):
     job = get_object_or_404(Job.objects.select_related("employer"), pk=pk)
     profile = GraduateProfile.objects.filter(user=request.user).first()
 
-    # Every view is logged; without this the collaborative component starves.
-    Interaction.objects.create(user=request.user, job=job, interaction_type=Interaction.VIEW)
+    # Every graduate view is logged; without this the collaborative component
+    # starves. Employer views are excluded: an employer browsing their own
+    # postings is not a signal about what graduates find relevant.
+    if request.user.is_graduate:
+        Interaction.objects.create(user=request.user, job=job,
+                                   interaction_type=Interaction.VIEW)
 
     matched, percentage = [], None
     if profile and profile.completeness():
@@ -150,7 +156,7 @@ def job_detail(request, pk):
     })
 
 
-@login_required
+@graduate_required
 def apply(request, pk):
     if request.method != "POST":
         return redirect("job_detail", pk=pk)
@@ -172,13 +178,115 @@ def apply(request, pk):
     return redirect("job_detail", pk=pk)
 
 
-@login_required
+@graduate_required
 def my_applications(request):
     profile, _ = GraduateProfile.objects.get_or_create(user=request.user)
     applications = (Application.objects
                     .filter(graduate=profile)
                     .select_related("job", "job__employer"))
     return render(request, "jobs/my_applications.html", {"applications": applications})
+
+
+# --- Employer role ----------------------------------------------------------
+
+
+def _company(request):
+    company, _ = EmployerProfile.objects.get_or_create(
+        user=request.user, defaults={"company_name": request.user.full_name})
+    return company
+
+
+@employer_required
+def employer_dashboard(request):
+    """Overview of the company's vacancies and the applications received."""
+    company = _company(request)
+    jobs = (Job.objects
+            .filter(employer=company)
+            .annotate(application_count=Count("applications"))
+            .order_by("-date_posted"))
+
+    return render(request, "jobs/employer_dashboard.html", {
+        "company": company,
+        "jobs": jobs,
+        "open_count": jobs.filter(status="open").count(),
+        "total_applications": Application.objects.filter(job__employer=company).count(),
+    })
+
+
+@employer_required
+def job_create(request):
+    company = _company(request)
+    if request.method == "POST":
+        form = JobForm(request.POST)
+        if form.is_valid():
+            job = form.save(commit=False)
+            job.employer = company
+            job.save()
+            messages.success(request, "Vacancy posted. It is now visible to graduates.")
+            return redirect("employer_dashboard")
+    else:
+        form = JobForm()
+    return render(request, "jobs/job_form.html", {"form": form, "job": None})
+
+
+@employer_required
+def job_edit(request, pk):
+    company = _company(request)
+    job = get_object_or_404(Job, pk=pk, employer=company)
+    if request.method == "POST":
+        form = JobForm(request.POST, instance=job)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Vacancy updated.")
+            return redirect("employer_dashboard")
+    else:
+        form = JobForm(instance=job)
+    return render(request, "jobs/job_form.html", {"form": form, "job": job})
+
+
+@employer_required
+def job_toggle(request, pk):
+    """Close a vacancy, or reopen a closed one."""
+    if request.method != "POST":
+        return redirect("employer_dashboard")
+    job = get_object_or_404(Job, pk=pk, employer=_company(request))
+    job.status = "closed" if job.status == "open" else "open"
+    job.save(update_fields=["status"])
+    messages.success(request, "Vacancy {}.".format(
+        "closed and withdrawn from the listings" if job.status == "closed" else "reopened"))
+    return redirect("employer_dashboard")
+
+
+@employer_required
+def job_applicants(request, pk):
+    """Applicants for one vacancy, ranked by fit (section 4.3.12)."""
+    job = get_object_or_404(Job, pk=pk, employer=_company(request))
+    applications = (Application.objects
+                    .filter(job=job)
+                    .select_related("graduate", "graduate__user"))
+    candidates = score_candidates(job, applications)
+
+    return render(request, "jobs/applicants.html", {
+        "job": job,
+        "candidates": candidates,
+        "strong": sum(1 for c in candidates if c.is_strong),
+        "status_choices": Application.STATUS_CHOICES,
+    })
+
+
+@employer_required
+def application_status(request, pk):
+    if request.method != "POST":
+        return redirect("employer_dashboard")
+    application = get_object_or_404(
+        Application.objects.select_related("job"), pk=pk, job__employer=_company(request))
+    status = request.POST.get("status")
+    if status in dict(Application.STATUS_CHOICES):
+        application.status = status
+        application.save(update_fields=["status"])
+        messages.success(request, "{} marked as {}.".format(
+            application.graduate.user.full_name, application.get_status_display().lower()))
+    return redirect("job_applicants", pk=application.job.pk)
 
 
 def _querystring(request):

@@ -128,6 +128,60 @@ def content_scores(profile, jobs):
     return cosine_similarity(profile_vector, job_vectors).flatten()
 
 
+class CandidateMatch:
+    """One scored applicant, for the employer's applicant list."""
+
+    def __init__(self, application, score, matched_skills):
+        self.application = application
+        self.graduate = application.graduate
+        self.score = score
+        self.matched_skills = matched_skills
+
+    @property
+    def percentage(self):
+        return int(round(self.score * 100))
+
+    @property
+    def is_strong(self):
+        return self.score >= STRONG_MATCH
+
+
+def score_candidates(job, applications):
+    """Rank applicants by how well their profile fits a vacancy.
+
+    The mirror of the graduate feed, using the same content-based comparison so
+    that the score an employer sees is derived the same way as the score shown
+    to the graduate. Collaborative filtering has no role here: an employer is
+    assessing fit against one specific vacancy, not discovering vacancies.
+    """
+    applications = list(applications)
+    if not applications:
+        return []
+
+    profiles = [a.graduate for a in applications]
+    documents = [p.profile_document() for p in profiles]
+    job_document = job.job_document()
+
+    scores = np.zeros(len(applications))
+    if job_document.strip() and any(d.strip() for d in documents):
+        vectoriser = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=1)
+        matrix = vectoriser.fit_transform(documents + [job_document])
+        scores = cosine_similarity(matrix[-1], matrix[:-1]).flatten()
+
+    calibrated = np.clip(scores / CONTENT_REFERENCE, 0.0, 1.0)
+
+    results = [
+        CandidateMatch(
+            application=application,
+            score=float(calibrated[i]),
+            matched_skills=_matched_skills(profiles[i], job),
+        )
+        for i, application in enumerate(applications)
+    ]
+    results.sort(key=lambda c: c.score, reverse=True)
+    return results
+
+
 def collaborative_scores(user, jobs):
     """Item-based collaborative filtering over logged interactions.
 

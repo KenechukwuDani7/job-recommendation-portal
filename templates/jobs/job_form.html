@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{% if job %}Edit vacancy{% else %}Post a job{% endif %} - JobMatch{% endblock %}
+
+{% block content %}
+<div style="max-width:660px">
+  <div class="results-head">
+    <div>
+      <h1>{% if job %}Edit vacancy{% else %}Post a job{% endif %}</h1>
+      <div class="sub">
+        The title and required skills are matched against graduate profiles,
+        so state them as they would appear in the role.
+      </div>
+    </div>
+  </div>
+
+  <form method="post" class="panel">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="notice warning">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="field">
+      <label for="{{ form.title.id_for_label }}">Job title</label>
+      {{ form.title }}
+      {% for e in form.title.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.description.id_for_label }}">Job description</label>
+      {{ form.description }}
+      {% for e in form.description.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="field">
+      <label for="{{ form.required_skills.id_for_label }}">Required skills</label>
+      {{ form.required_skills }}
+      <div class="help">{{ form.required_skills.help_text }}</div>
+      {% for e in form.required_skills.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.location.id_for_label }}">Location</label>
+        {{ form.location }}
+        {% for e in form.location.errors %}<div class="error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        <label for="{{ form.job_type.id_for_label }}">Job type</label>
+        {{ form.job_type }}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.experience_level.id_for_label }}">Experience level</label>
+        {{ form.experience_level }}
+      </div>
+      <div class="field">
+        <label for="{{ form.deadline.id_for_label }}">Application deadline</label>
+        {{ form.deadline }}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.salary_min.id_for_label }}">Salary from (NGN)</label>
+        {{ form.salary_min }}
+      </div>
+      <div class="field">
+        <label for="{{ form.salary_max.id_for_label }}">Salary to (NGN)</label>
+        {{ form.salary_max }}
+      </div>
+    </div>
+
+    <button class="btn" type="submit">
+      {% if job %}Save changes{% else %}Post vacancy{% endif %}
+    </button>
+    <a class="btn secondary" href="{% url 'employer_dashboard' %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

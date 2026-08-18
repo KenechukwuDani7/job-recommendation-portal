@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Company profile - JobMatch{% endblock %}
+
+{% block content %}
+<div style="max-width:620px">
+  <div class="results-head">
+    <div>
+      <h1>Company profile</h1>
+      <div class="sub">These details appear on every vacancy you post.</div>
+    </div>
+  </div>
+
+  <form method="post" class="panel">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="notice warning">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="field">
+      <label for="{{ form.company_name.id_for_label }}">Company name</label>
+      {{ form.company_name }}
+      {% for e in form.company_name.errors %}<div class="error">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.industry.id_for_label }}">Industry</label>
+        {{ form.industry }}
+      </div>
+      <div class="field">
+        <label for="{{ form.website.id_for_label }}">Website</label>
+        {{ form.website }}
+        {% for e in form.website.errors %}<div class="error">{{ e }}</div>{% endfor %}
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="{{ form.description.id_for_label }}">About the company</label>
+      {{ form.description }}
+    </div>
+
+    <button class="btn" type="submit">Save company profile</button>
+  </form>
+</div>
+{% endblock %}
