@@ -5,6 +5,7 @@ demonstration. This command builds a corpus large enough for TF-IDF weighting
 to behave sensibly and for the evaluation in section 4.6.2 to mean something.
 """
 
+import os
 import random
 from datetime import timedelta
 
@@ -281,7 +282,10 @@ class Command(BaseCommand):
         first = graduates[0].user.email if graduates else "none"
         self.stdout.write("Test graduate login:       {} / testpass123".format(first))
         self.stdout.write("Test employer login:       hr@andela.com / testpass123")
-        self.stdout.write("Test administrator login:  {} / testpass123".format(admin.email))
+        self.stdout.write("Test administrator login:  {} / {}".format(
+            admin.email,
+            "(DEMO_ADMIN_PASSWORD)" if os.environ.get("DEMO_ADMIN_PASSWORD")
+            else "testpass123"))
 
     MIN_JOBS_PER_FIELD = 3
 
@@ -314,17 +318,24 @@ class Command(BaseCommand):
         return picks
 
     def _create_admin(self):
-        """A local administrator account, so the admin screens can be shown
-        without running createsuperuser interactively. Development only: the
-        SQLite database is not committed and DEBUG is on."""
+        """An administrator account, so the admin screens can be shown without
+        running createsuperuser interactively.
+
+        The password is taken from DEMO_ADMIN_PASSWORD when it is set. The
+        graduate and employer passwords are published in the project
+        documentation and are harmless, but a published administrator password
+        on a publicly reachable deployment would let any visitor suspend
+        employers, so the deployed database is built with a different one.
+        """
         email = "admin@jobmatch.local"
+        password = os.environ.get("DEMO_ADMIN_PASSWORD", "testpass123")
         user, created = User.objects.get_or_create(
             email=email,
             defaults={"username": email, "full_name": "Platform Administrator",
                       "role": User.ADMIN, "is_staff": True, "is_superuser": True},
         )
-        if created:
-            user.set_password("testpass123")
+        if created or os.environ.get("DEMO_ADMIN_PASSWORD"):
+            user.set_password(password)
             user.save()
         return user
 

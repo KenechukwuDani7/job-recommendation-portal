@@ -82,6 +82,35 @@ The default corpus of 20 vacancies is sized for demonstration; the evaluation
 needs the larger corpus to be meaningful. Reseed without `--jobs` afterwards to
 return to the smaller one.
 
+## Deployment
+
+The repository is configured for Vercel. Import it as a new project, leave the
+framework preset as "Other" so `vercel.json` drives the build, and set:
+
+| Variable | Value |
+| --- | --- |
+| `DJANGO_SECRET_KEY` | a long random string |
+| `DJANGO_DEBUG` | `False` |
+| `DJANGO_ALLOWED_HOSTS` | `.vercel.app` |
+
+The recommendation engine uses a NumPy implementation of TF-IDF and cosine
+similarity rather than scikit-learn, because scikit-learn and SciPy together
+exceed the platform's function size limit. `recommender/test_parity.py` checks
+the two implementations against each other on the real corpus; they agree to
+floating point precision, so the reported evaluation figures describe either.
+
+The platform's filesystem is read-only apart from a temporary directory, so a
+pre-seeded database ships with the deployment and is copied there when an
+instance starts. Anything a visitor creates lasts only until that instance is
+recycled, after which the seeded data returns. Set `DATABASE_URL` to an
+external database if the data needs to persist; the settings prefer it whenever
+it is present.
+
+The administrator password in the deployed database is set from
+`DEMO_ADMIN_PASSWORD` at seed time and is not the one documented above, since
+the repository is public and a published administrator password would let any
+visitor moderate the live demonstration.
+
 ## Structure
 
 ```
