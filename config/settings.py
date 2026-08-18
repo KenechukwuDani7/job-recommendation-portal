@@ -33,8 +33,12 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 ALLOWED_HOSTS = [h for h in os.environ.get(
     "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if h]
 
+# A leading dot in ALLOWED_HOSTS means "any subdomain"; CSRF_TRUSTED_ORIGINS
+# expresses the same thing with an explicit wildcard, so ".vercel.app" has to
+# become "https://*.vercel.app" rather than "https://.vercel.app".
 CSRF_TRUSTED_ORIGINS = [
-    "https://{}".format(h) for h in ALLOWED_HOSTS if h not in ("127.0.0.1", "localhost")
+    "https://*{}".format(h) if h.startswith(".") else "https://{}".format(h)
+    for h in ALLOWED_HOSTS if h not in ("127.0.0.1", "localhost")
 ]
 
 
@@ -185,3 +189,28 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# --- Serverless deployment ---------------------------------------------------
+#
+# The platform's filesystem is read-only apart from /tmp, and /tmp does not
+# survive beyond the life of an instance. A pre-seeded SQLite database is
+# shipped with the deployment and copied into /tmp the first time an instance
+# starts, so the demonstration has data to show immediately.
+#
+# The consequence is that anything a visitor creates -- a registration, an
+# application -- lasts only until that instance is recycled, after which the
+# database returns to the seeded state. That is acceptable for a public
+# demonstration and is stated in the README. Set DATABASE_URL to an external
+# database if the data needs to persist.
+
+if os.environ.get("VERCEL") and not _database_url:
+    import shutil
+
+    _seeded = BASE_DIR / "demo_data.sqlite3"
+    _writable = "/tmp/db.sqlite3"
+    if _seeded.exists() and not os.path.exists(_writable):
+        shutil.copy(_seeded, _writable)
+    DATABASES["default"]["NAME"] = _writable
+
+    # Uploaded files cannot be written into the deployment either.
+    MEDIA_ROOT = "/tmp/media"

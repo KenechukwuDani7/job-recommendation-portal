@@ -22,10 +22,10 @@ Hybrid
 
 import numpy as np
 from django.conf import settings
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
 from jobs.models import Interaction, Job
+
+from .vectoriser import TfidfVectorizer, cosine_similarity
 
 CONTENT_WEIGHT = getattr(settings, "RECOMMENDER_CONTENT_WEIGHT", 0.7)
 COLLAB_WEIGHT = getattr(settings, "RECOMMENDER_COLLAB_WEIGHT", 0.3)
