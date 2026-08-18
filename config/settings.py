@@ -29,7 +29,13 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+# Hosts are supplied by the deployment platform; localhost is kept for development.
+ALLOWED_HOSTS = [h for h in os.environ.get(
+    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if h]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://{}".format(h) for h in ALLOWED_HOSTS if h not in ("127.0.0.1", "localhost")
+]
 
 
 # Application definition
@@ -47,6 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -136,6 +143,13 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "home"
 
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+}
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -157,3 +171,17 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Weighting of the hybrid recommender (section 3.6.6).
 RECOMMENDER_CONTENT_WEIGHT = 0.7
 RECOMMENDER_COLLAB_WEIGHT = 0.3
+
+# When DATABASE_URL is set by the deployment platform it takes precedence over
+# the local SQLite database configured above.
+_database_url = os.environ.get("DATABASE_URL")
+if _database_url:
+    import dj_database_url
+
+    DATABASES["default"] = dj_database_url.parse(_database_url, conn_max_age=600)
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
