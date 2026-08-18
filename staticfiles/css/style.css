@@ -36,14 +36,16 @@ a:hover { text-decoration: underline; }
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 16px;
-  height: 52px;
+  min-height: 52px;
   display: flex;
   align-items: center;
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: 8px 24px;
 }
 .brand { font-weight: 700; font-size: 17px; color: var(--text); }
 .brand:hover { text-decoration: none; }
-.nav { display: flex; gap: 18px; align-items: center; margin-left: auto; }
+.nav { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+       margin-left: auto; }
 .nav a { color: var(--meta); }
 .nav a.active { color: var(--text); font-weight: 600; }
 
@@ -85,6 +87,8 @@ a:hover { text-decoration: underline; }
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 10px;
 }
 .results-head h1 { font-size: 18px; margin: 0; }
@@ -250,4 +254,65 @@ th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: 
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin-top: 3px;
+}
+
+/* ---------- filters as a disclosure ---------- */
+/* On a phone the filter rail otherwise fills the first screen, so a graduate
+   has to scroll past every filter before reaching a single vacancy. The rail
+   is a <details> element: open and with its summary hidden on desktop, and
+   collapsed below the results on a narrow screen. */
+.filters > summary {
+  display: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  list-style: none;
+  padding: 4px 0;
+}
+.filters > summary::-webkit-details-marker { display: none; }
+.filters > summary::after { content: " BE"; }
+.filters[open] > summary::after { content: " B4"; }
+
+/* ---------- narrow screens ---------- */
+@media (max-width: 800px) {
+  /* Vacancies first, filters after: the results are what the page is for. */
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; flex: none; order: 2; }
+  .main { order: 1; width: 100%; }
+
+  .filters > summary { display: block; }
+  .filters[open] { padding-bottom: 4px; }
+
+  /* Roomier tap targets on the filter list. */
+  .filter-group a { padding: 5px 0; }
+  .filter-group li { margin-bottom: 0; }
+
+  .nav { gap: 10px 14px; }
+  .header-inner { padding: 6px 12px; }
+  .container { padding: 12px; }
+}
+
+@media (max-width: 560px) {
+  /* Paired form fields have too little room to sit side by side. */
+  .row { flex-direction: column; gap: 0; }
+
+  /* Move the match score under the vacancy rather than squeezing the title. */
+  .job { flex-wrap: wrap; }
+  .job-body { flex: 1 1 100%; }
+  .match {
+    flex: 1 1 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+  .match .bar { flex: 1; margin-top: 0; }
+  .match-label { order: 3; }
+
+  .brand { font-size: 16px; }
+  .nav { font-size: 13px; }
+  .results-head h1 { font-size: 17px; }
 }

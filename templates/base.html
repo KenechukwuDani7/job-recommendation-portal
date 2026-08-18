@@ -47,5 +47,14 @@
     {% endif %}
     {% block content %}{% endblock %}
   </div>
+  <script>
+    // Collapse the filter rail on narrow screens so the results come first.
+    (function () {
+      var filters = document.querySelector('.filters');
+      if (filters && window.matchMedia('(max-width: 800px)').matches) {
+        filters.removeAttribute('open');
+      }
+    })();
+  </script>
 </body>
 </html>
